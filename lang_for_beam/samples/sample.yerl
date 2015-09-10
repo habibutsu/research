@@ -1,0 +1,52 @@
+import io
+import lists
+
+def add1(a, b):
+    a + b
+
+# type annotations
+def add2(a:int, b:int) -> int:
+    a + b
+
+# generics
+def add3(a:T, b:T) -> T type T:
+    a + b
+
+# declaration-site variance
+def add4(a:T, b:T) -> T type (in T):
+    a + b
+
+def sample_fun():
+    val1 = `some_atom
+    val2 = 'another_atom'
+
+    match val1:
+        case 'some_atom':
+            io.format('Case1')
+        case _:
+            io.format('All other cases')
+
+    lists.map(
+        lambda x: x*2,
+        [1,2,3])
+
+
+def data_structures():
+
+    my_list = [1,2,3]
+    my_tuple = {1,2,3}
+    my_hash = {"key": "value"}
+
+    my_string = "just a string"
+    my_binary = b"simple binary"
+
+
+class Eq type a:
+
+    def '=='(a, a) -> bool
+
+
+instance Eq type Shape:
+
+    def '=='(s1, s2):
+        s1.area == s2.area

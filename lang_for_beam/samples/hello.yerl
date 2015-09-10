@@ -1,0 +1,6 @@
+import io
+
+def hello_world():
+    args = init.get_arguments()
+    io.format("Hello world\n")
+    io.format("Init arguments: ~p~n", args).
