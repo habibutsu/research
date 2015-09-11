@@ -1,3 +1,4 @@
 
 pybison
 .venv
+*.so

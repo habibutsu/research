@@ -46,7 +46,7 @@ class Eq type a:
     def '=='(a, a) -> bool
 
 
-instance Eq type Shape:
+instance Eq for Shape:
 
     def '=='(s1, s2):
         s1.area == s2.area

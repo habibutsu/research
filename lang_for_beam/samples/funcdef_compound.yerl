@@ -1,0 +1,6 @@
+
+def simple(a, b):
+    
+    def nested():
+        pass
+
