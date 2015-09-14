@@ -1,0 +1,5 @@
+
+pybulletphysics
+*.so
+.venv
+deps
