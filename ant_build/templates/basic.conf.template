@@ -1,0 +1,7 @@
+
+
+VAR = @VAR@
+
+path = %build.dir%
+
+serverUrl = myapp.config.var

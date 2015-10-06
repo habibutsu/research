@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="build-example">
+    <property file="build.properties.default" />
+    <property name="build.dir" location="_build"/>
+    <property name="templates.dir" value="./templates"/>
+    <property name="src.dir" location="."/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+    <target name="build-template">
+        <echo message="Build templates ${templates.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <delete file="${build.dir}/basic.conf"/>
+        <copy
+            file="${templates.dir}/basic.conf.template"
+            tofile="${build.dir}/basic.conf">
+            <filterchain>
+               <replacetokens>
+                   <token key="VAR" value="VALUE"/>
+                </replacetokens>
+            </filterchain>
+            <filterchain>
+                <replacetokens begintoken="%" endtoken="%">
+                    <token key="build.dir" value="${build.dir}"/>
+                </replacetokens>
+            </filterchain>
+        </copy>
+        <replace
+            file="${build.dir}/basic.conf"
+            includes="${build.dir}/basic.conf"
+            replacefilterfile="myapp.config" />
+    </target>
+</project>
