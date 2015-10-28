@@ -12,18 +12,18 @@ class erlc(Task.Task):
 class cp(Task.Task):
     run_str='${CP} ${SRC} ${TGT}'
 
-class curl(Task.Task):
-    update_outputs = True
+# class curl(Task.Task):
+#     update_outputs = True
 
-    def run(self):
-        cmd = "%s %s > %s" % (Utils.subst_vars("${CURL}", self.env), self.url, self.outputs[0].relpath())
-        return self.exec_command(cmd)
+#     def run(self):
+#         cmd = "%s %s > %s" % (Utils.subst_vars("${CURL}", self.env), self.url, self.outputs[0].relpath())
+#         return self.exec_command(cmd)
 
 def configure(conf):
     conf.find_program('erlc', var='ERLC')
     conf.find_program('tar')
     conf.find_program('cp')
-    conf.find_program('curl')
+    #conf.find_program('curl')
 
 
 @extension('.erl')
@@ -41,11 +41,11 @@ def add_app_src(self, node):
     return tsk
 
 
-@feature('get-deps')
-def get_deps(self):
-    libs = self.path.find_or_declare(["libs"])
-    for pkg in self.pkgs:
-        tar = "%s-%s.tar" % pkg
-        tar_url = DEFAULT_CDN + "/" + tar
-        tgt = libs.find_or_declare([tar])
-        tsk = self.create_task('curl', None, tgt, url=tar_url)
+# @feature('get-deps')
+# def get_deps(self):
+#     libs = self.path.find_or_declare(["libs"])
+#     for pkg in self.pkgs:
+#         tar = "%s-%s.tar" % pkg
+#         tar_url = DEFAULT_CDN + "/" + tar
+#         tgt = libs.find_or_declare([tar])
+#         tsk = self.create_task('curl', None, tgt, url=tar_url)
