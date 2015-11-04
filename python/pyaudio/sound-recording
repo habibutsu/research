@@ -1,0 +1,242 @@
+#!/usr/bin/env python
+import argparse
+import sys
+import runpy
+import os
+import lockfile
+import logging
+import time
+import tarfile
+import wave
+import audioop
+from datetime import datetime
+
+try:
+    from daemon import runner
+except ImportError:
+    LIBS_DIR = os.path.join(os.path.dirname(__file__), 'libs')
+    sys.path.insert(0, os.path.join(LIBS_DIR, 'python-daemon-2.0.6.zip'))
+
+try:
+    from daemon import runner
+except ImportError:
+    print("ERROR: Could not start")
+    print("This program require 'python-daemon' package")
+    sys.exit(1)
+
+try:
+    import pyaudio
+except ImportError:
+    print("ERROR: Could not start")
+    print("This program require 'pyaudio' package")
+    sys.exit(1)
+
+
+class Application:
+
+    def __init__(self):
+        self.pidfile_path = None
+        self.pidfile_timeout = None
+        self.stdin_path = '/dev/null'
+
+        self.parse_args()
+        
+        if self.args.daemon:
+            self.stdout_path = self.args.log_file
+            self.stderr_path = self.args.log_file
+        else:
+            self.stdout_path = '/dev/tty'
+            self.stderr_path = '/dev/tty'
+
+        if not os.path.exists(self.args.out_dir):
+            os.makedirs(self.args.out_dir)
+        self.wf = None
+
+    def parse_args(self):
+
+        parser = argparse.ArgumentParser(
+            description="Recording sound daemon",
+        )
+        parser.add_argument(
+            'action', metavar='action',
+            choices=['stop', 'start', 'restart'],
+            help='stop | start | restart')
+
+        parser.add_argument(
+            "--daemon", "-d",
+            action='store_const',
+            const=True, default=False,
+            help="Run program as daemon")
+
+        parser.add_argument(
+            "--rms-threshold",
+            required=False,
+            default=1000, type=int,
+            help="threshold of rms for detect silence (default: 1000)")
+
+        parser.add_argument(
+            "--silent-timeout",
+            required=False,
+            default=5, type=int,
+            help="Timeout after which sound not recorded in minutes (default: 5)")
+
+        parser.add_argument(
+            "--rotate",
+            required=False,
+            default=15, type=int,
+            help="Interval for rotation in minutes (default: 15)")
+
+        parser.add_argument(
+            "--out-dir",
+            required=False,
+            default="/tmp/sound-recording/",
+            help="Output directory for files (default: /tmp/sound-recording/)")
+
+        parser.add_argument(
+            "--log-file",
+            required=False,
+            default="/tmp/sound-recording.log",
+            help="Output directory for files (default: /tmp/sound-recording.log)")
+
+        parser.add_argument(
+            "--mono",
+            action='store_const',
+            const=True, default=False,
+            help="Enable mono")
+
+        parser.add_argument(
+            "--rate",
+            required=False,
+            default=44100, type=int,
+            help="Bitrate for recording of sound (default: 44100)")
+
+        parser.add_argument(
+            "--pidfile", "-p",
+            required=False,
+            default="/tmp/sound-recording.pid", type=str,
+            help="pid-file (default: /tmp/sound-recording.pid)")
+
+        parser.add_argument(
+            "--pidfile-timeout", "-t",
+            required=False,
+            default=5, type=int,
+            help="pid-file timeout (default: 5)")
+
+        self.args = parser.parse_args()
+        self.pidfile_path = self.args.pidfile
+        self.pidfile_timeout = self.args.pidfile_timeout
+
+    def init_logger(self):
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+        fh = logging.FileHandler(self.args.log_file)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+
+        logger = logging.getLogger('sound-recording')
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(fh)
+
+        if not self.args.daemon:
+            sh = logging.StreamHandler(sys.stdout)
+            sh.setLevel(logging.DEBUG)
+            sh.setFormatter(formatter)
+            logger.addHandler(sh)
+
+        self.logger = logger
+
+    def run(self):
+        self.init_logger()
+        self.logger.info("Running application")
+
+        self.pyaudio_obj = pyaudio.PyAudio()
+        self.FORMAT = pyaudio.paInt16
+        self.WIDTH = self.pyaudio_obj.get_sample_size(self.FORMAT)
+        self.CHUNK = 1024
+        self.RATE = self.args.rate
+        self.READ_LENGTH = int(self.RATE / self.CHUNK)
+        self.CHANNELS = 1 if self.args.mono else 2
+
+        stream = self.pyaudio_obj.open(
+            format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
+            frames_per_buffer=self.CHUNK, input=True)
+
+        self.open_wave_file()
+
+        start_time = time.time()
+        silence_start = time.time()
+
+        while True:
+            try:
+                frames = []
+                for i in range(0, self.READ_LENGTH):
+                    data = stream.read(self.CHUNK)
+                    frames.append(data)
+                frame_data = b''.join(frames)
+
+                now = time.time()
+                if (now - start_time) > self.args.rotate * 60:
+                    self.rotate_wave_file()
+                    start_time = time.time()
+
+                # detection of silence
+                rms = audioop.rms(frame_data, self.WIDTH)
+                if rms < self.args.rms_threshold:
+                    silence_start = now
+
+                if (now - silence_start) > self.args.silent_timeout * 60:
+                    self.logger.debug("Detected silence since %s", silence_start)
+
+                self.wf.writeframes(frame_data)
+
+            except BaseException as e:
+                print(e)
+                self.logger.exception(e)
+                self.logger.debug("Terminating")
+
+                self.wf.close()
+                stream.stop_stream()
+                stream.close()
+                self.pyaudio_obj.terminate()
+                sys.exit(1)
+
+    def close_wave_file(self):
+        if self.wf is not None:
+            self.wf.close()
+
+    def rotate_wave_file(self):
+        self.close_wave_file()
+        tar = tarfile.open("%s.tar.gz" % self.filename, "w:gz")
+        tar.add(self.filename)
+        tar.close()
+        os.remove(self.filename)
+        self.open_wave_file()
+
+    def open_wave_file(self):
+        self.filename = os.path.join(
+            self.args.out_dir,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".wav")
+
+        self.logger.info("Open new file %s", self.filename)
+        wf = wave.open(self.filename, 'wb')
+        wf.setnchannels(self.CHANNELS)
+        wf.setsampwidth(self.WIDTH)
+        wf.setframerate(self.RATE)
+        self.wf = wf
+
+class DaemonRunner(runner.DaemonRunner):
+
+    def __init__(self, app):
+        runner.DaemonRunner.__init__(self, app)
+        self.action = self.app.args.action
+
+    def parse_args(self, argv=None):
+        pass
+
+if __name__ == "__main__":
+    app = Application()
+    daemon_runner = DaemonRunner(app)
+    if app.args.daemon:
+        daemon_runner.do_action()
+    elif app.args.action == 'start':
+        app.run()
