@@ -15,9 +15,13 @@ int main(int argc, char* argv[])
     unsigned char ckey[] = "1234567890123456";
 
     unsigned char ivec[] = "1234567890123456";
-    unsigned char ivec_clone[AES_BLOCK_SIZE];
 
-    memcpy(ivec_clone , ivec, AES_BLOCK_SIZE);
+    // encrypted/decrypted operations is destructive for ivec
+    unsigned char ivec_clone1[AES_BLOCK_SIZE];
+    unsigned char ivec_clone2[AES_BLOCK_SIZE];
+
+    memcpy(ivec_clone1 , ivec, AES_BLOCK_SIZE);
+    memcpy(ivec_clone2 , ivec, AES_BLOCK_SIZE);
 
 
     // data structure that contains the key itself
@@ -26,28 +30,27 @@ int main(int argc, char* argv[])
     // set the encryption key
     AES_set_encrypt_key(ckey, AES_BLOCK_SIZE*8, &aes_key);
 
-    // set where on the 128 bit encrypted block to begin encryption
-
 
     unsigned char indata[] = "Hello";
-    int text_size = sizeof(indata);
+    int text_size = sizeof(indata)-1;
 
     unsigned char outdata[AES_BLOCK_SIZE];
     unsigned char decryptdata[AES_BLOCK_SIZE];
 
     int num = 0;
-    AES_cfb128_encrypt(indata, outdata, AES_BLOCK_SIZE, &aes_key, ivec, &num, AES_ENCRYPT);
+    AES_cfb128_encrypt(indata, outdata, AES_BLOCK_SIZE, &aes_key, ivec_clone1, &num, AES_ENCRYPT);
 
-    AES_cfb128_encrypt(outdata, decryptdata, AES_BLOCK_SIZE, &aes_key, ivec_clone, &num, AES_DECRYPT);
+    AES_cfb128_encrypt(outdata, decryptdata, AES_BLOCK_SIZE, &aes_key, ivec_clone2, &num, AES_DECRYPT);
 
-    cout << "original data:   " << indata << endl;
-    cout << "size:            " << text_size << endl;
-    cout << "encrypted data:  " << outdata << endl;
-    cout << "decrypted data:  " << decryptdata << endl;
+    cout << "key:                    " << ckey << endl;
+    cout << "iv:                     " << ivec << endl;
+    cout << "original data:          " << indata << endl;
+    cout << "size:                   " << text_size << endl;
+    cout << "encrypted data:         ";
     for (int i = 0; i < text_size; i++)
-    {
-            cout << (int) outdata[i] << ",";
-    }
+        cout << std::hex << (int)  outdata[i];
+
     cout << endl;
+    cout << "decrypted data:         " << decryptdata << endl;
     return 0;
 }
