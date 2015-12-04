@@ -1,4 +1,4 @@
-name := "hibernate"
+name := "c3p0"
 
 version := "1.0"
 
