@@ -3,8 +3,7 @@
         korma.db
         korma.core
         sqlkorma.db
-        sqlkorma.entities
-        sqlkorma.db_schema)
+        sqlkorma.entities)
     (:gen-class))
 
 (defn -main
@@ -32,14 +31,14 @@
     )
     (println "dry-run (batch): "
         (dry-run (select user (with-batch email) (with-batch phone))))
-    (let [users (select user (with-batch email) (with-batch phone))]
+    (let [users (select user (fields :id) (with-batch email) (with-batch phone))]
         (println "using 'with': " users)
     )
-    ; (let [
-    ;         users (
-    ;             select user
-    ;             (fields :email.email)
-    ;             (join email (= :email.users_id :id)))]
-    ;     (println "using joins: "users)
-    ; )
+    (let [
+            users (
+                select user
+                (fields :emails.email)
+                (join email (= :emails.users_id :id)))]
+        (println "using 'join': "users)
+    )
 )

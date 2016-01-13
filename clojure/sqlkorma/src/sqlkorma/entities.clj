@@ -1,24 +1,26 @@
 (ns sqlkorma.entities
     (:use korma.core)
 )
+(require '[clojure.string :as str])
 
 (declare user email phone)
 
 (defentity user
     (pk :id)
     (table :users)
-    (entity-fields :id :name) ;; default fields for selects
-
+    (entity-fields :name)
     (has-many email)
     (has-one phone)
 )
 
 (defentity email
+    (pk :id)
     (table :emails)
-    (entity-fields :id :email)
+    (entity-fields :email)
     (belongs-to user))
 
 (defentity phone
+    (pk :id)
     (table :phones)
-    (entity-fields :id :phone)
+    (entity-fields :phone)
     (belongs-to user))
