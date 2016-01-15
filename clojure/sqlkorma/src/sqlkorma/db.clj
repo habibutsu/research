@@ -18,6 +18,7 @@
     "create table \"users\" (
         \"id\" serial primary key,
         \"name\" varchar(128),
+        \"email\" varchar(128),
         \"country\" varchar(128)
     );"
 

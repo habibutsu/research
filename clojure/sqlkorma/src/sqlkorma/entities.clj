@@ -17,7 +17,16 @@
     (pk :id)
     (table :emails)
     (entity-fields :email)
-    (belongs-to user))
+    (belongs-to user)
+
+    ; (prepare (fn [{last :email :as v}]
+    ;          (if last
+    ;            (assoc v :email (str/upper-case last)) v)))
+
+    (transform (fn [{first :email :as v}]
+               (if first
+                 (assoc v :email (str/upper-case first)) v)))
+)
 
 (defentity phone
     (pk :id)
