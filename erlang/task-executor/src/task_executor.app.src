@@ -1,0 +1,14 @@
+{application, task_executor, [
+    {description, "An Erlang task_executor library"},
+    {vsn, "1"},
+    {modules, [
+        task_executor
+    ]},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
+        crypto
+    ]},
+    {env, []}
+]}.

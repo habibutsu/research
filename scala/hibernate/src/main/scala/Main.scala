@@ -67,7 +67,7 @@ object Main extends App{
     sample_Query()
 
     while(keepRunning){
-      print(".")
+      println("Press Ctr+C for completing")
       Thread.sleep(1000)
     }
     session.flush();

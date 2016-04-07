@@ -1,0 +1,9 @@
+ebin
+logs
+deps
+.eunit
+.rebar
+*.cache
+*.log
+*.beam
+*.dump

@@ -38,7 +38,8 @@
     (defn sql-join [] (
         select user
             (fields :email :emails.email)
-            (join email (= :emails.users_id :id)))
+            ; (join email (= :emails.users_id :id)))
+            (join email))
     )
     (let [users (sql-join)]
         (println "using 'join' (sql): " (sql-only (sql-join)))
@@ -47,4 +48,11 @@
     (println "raw sql: "
         (exec-raw ["SELECT * FROM emails"] :results) 
     )
+
+    (println "select email: "
+        (dry-run (select email (with-batch user)))
+    )
+    (println "back joins: "
+        (sql-only (select email (fields :users.name)
+            (join user))))
 )

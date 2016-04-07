@@ -15,7 +15,7 @@ object Main extends App{
 
     val cpds = new ComboPooledDataSource()
     cpds.setDriverClass("org.postgresql.Driver")
-    cpds.setJdbcUrl( "jdbc:postgresql://127.0.0.1/testdb" )
+    cpds.setJdbcUrl("jdbc:postgresql://127.0.0.1/testdb")
     cpds.setUser("dbuser")
     cpds.setPassword("dbpassword")
     cpds.setInitialPoolSize(1)
@@ -38,7 +38,7 @@ object Main extends App{
     val result = stmt2.getResultSet
     result.next()
     println(result.getString("result"))
- 
+
     val stmt3 = testConnection.createStatement();
     stmt3.setQueryTimeout( 20 );
     try{
