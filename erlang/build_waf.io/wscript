@@ -10,9 +10,10 @@ out = '_build'
 def configure(ctx):
     print('configuring the project in ' + ctx.path.abspath())
     ctx.load('erlc')
+    ctx.load('hexpm')
     ctx.env.ERLC_FLAGS = []
 
-def build(ctx):
+def _build(ctx):
     ctx(features="get-deps",
         pkgs=[
             ("cowboy", "1.0.3"),
@@ -26,3 +27,21 @@ def build(ctx):
                 SOURCES.append(os.path.join(root, file))
 
     ctx(source=SOURCES)
+
+from waflib import Task, Utils, Context
+
+class MyLS(Task.Task):
+    color = 'PINK'
+
+    def run(self):
+        out = self.generator.bld.cmd_and_log("ls -la", quiet=Context.STDOUT)
+        #out = Utils.to_list(out)
+        print(out)
+
+def build(ctx):
+    ctx(features="get-deps",
+        pkgs=[
+            ("cowboy", "1.0.3"),
+            ("lager", "2.1.1")
+        ])
+
