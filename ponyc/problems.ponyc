@@ -1,0 +1,18 @@
+// Worked
+for name in ["Bob", "Fred", "Sarah"].values() do
+  env.out.print(name)
+end
+
+// Does not worked
+for name in [0,1,2,3].values() do
+  env.out.print(name)
+end
+
+//worked
+(i*delta) + 1
+// does not work
+i*delta + 1
+
+// union type does not work with behaviour
+
+// U32 with U64 - argument not a subtype of parameter
